@@ -1,0 +1,19 @@
+
+:root {
+  --primary-color: #38D7E7;
+  --primary-text: #0c0c0c;
+  --secondary-color: #ee316b;
+  --third-color: #842D72;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: var(#f9f7f1);
+  margin: 0;
+  padding: 3rem;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 600;
+}
