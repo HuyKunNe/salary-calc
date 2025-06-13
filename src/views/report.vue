@@ -1,7 +1,7 @@
 <template>
   <div class="">
     <h1 class="text-center sticky top-0">
-      BÁO CÁO GIỜ DẠY HÀNG THÁNG - GIÁO VIÊN
+      BÁO CÁO GIỜ DẠY THÁNG {{ monthFilter }} - GIÁO VIÊN
     </h1>
   </div>
 </template>
@@ -14,13 +14,13 @@ export default defineComponent({
   components: {},
   setup() {
     const filteredData = useStorage<Teacher[]>("filteredData", []);
+    const monthFilter = useStorage<string>("monthFilter", "");
     return {
       filteredData,
+      monthFilter,
     };
   },
   mounted() {
-    // This is where you can fetch or process data if needed
-    // For example, you might want to load the filtered data from local storage
     console.log("Filtered Data:", this.filteredData);
   },
 });

@@ -4,6 +4,7 @@
   --primary-text: #0c0c0c;
   --secondary-color: #ee316b;
   --third-color: #842D72;
+  --spacing: 1rem;
 }
 
 body {
@@ -11,9 +12,16 @@ body {
   background-color: var(#f9f7f1);
   margin: 0;
   padding: 3rem;
+  font-size: 1.2rem;
 }
 
 h1 {
   font-size: 2rem;
   font-weight: 600;
+}
+
+.n-data-table .n-data-table-th {
+  font-weight: bold;
+  background-color: var(--primary-color);
+  color: white;
 }

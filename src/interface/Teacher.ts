@@ -6,4 +6,5 @@ export interface Teacher {
   teachingHours: number; // "SỐ GIỜ DẠY (H)"
   email: string; // "Địa chỉ email"
   month: string; // "Tháng" (MM/YYYY format)
+  note?: string; // "Ghi chú" (optional)
 }
