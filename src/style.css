@@ -33,3 +33,13 @@ h1 {
   font-size: 1.5rem;
   font-weight: 600;
 }
+
+.duplicate-row {
+  background-color: #ff4d4f !important;
+  font-weight: bold;
+  font-style: italic;
+}
+
+.n-data-table .n-data-table-td {
+  background-color: transparent;
+}

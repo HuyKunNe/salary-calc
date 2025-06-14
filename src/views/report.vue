@@ -58,6 +58,7 @@
             :max-height="400"
             :bordered="false"
             :single-line="false"
+            :row-props="rowProps"
             :style="{ fontSize: '1rem' }"
           />
         </n-config-provider>
@@ -67,48 +68,11 @@
 </template>
 <script lang="ts">
 import { useStorage } from "@vueuse/core";
-import { defineComponent, h, ref } from "vue";
+import { computed, defineComponent, h, ref } from "vue";
 import type { Teacher } from "../interface/Teacher";
 import type { Employee } from "../interface/Employee";
-import { NButton } from "naive-ui";
+import { NButton, NTooltip, type DataTableColumn } from "naive-ui";
 import type { SalaryData } from "../interface/SalaryData";
-
-const salaryColumns = [
-  {
-    title: "No",
-    key: "no",
-    width: 60,
-    align: "center",
-  },
-  {
-    title: "Teaching Date",
-    key: "date",
-    width: 150,
-  },
-  {
-    title: "Class Code",
-    key: "classCode",
-    width: 250,
-  },
-  {
-    title: "Teaching Hours",
-    key: "teachingHours",
-    align: "center",
-    width: 150,
-  },
-  {
-    title: "Note",
-    key: "note",
-  },
-  {
-    title: "Rate/Hour",
-    key: "rate",
-  },
-  {
-    title: "Balance",
-    key: "balance",
-  },
-];
 
 export default defineComponent({
   name: "ReportPage",
@@ -170,26 +134,85 @@ export default defineComponent({
       return `1-${lastDay} ${monthName}`;
     };
 
-    // const findDuplicates = (data: SalaryData[]) => {
-    //   const seen = new Map<string, boolean>();
-    //   const duplicates = new Set<number>();
+    const findDuplicates = (data: SalaryData[]) => {
+      const seen = new Map<string, boolean>();
+      const duplicates = new Set<number>();
 
-    //   data.forEach((item, index) => {
-    //     const key = `${item.date}-${item.classCode}`;
-    //     if (seen.has(key)) {
-    //       duplicates.add(index);
-    //       // Also mark the original duplicate
-    //       const originalIndex = data.findIndex(
-    //         (x) => `${x.date}-${x.classCode}` === key
-    //       );
-    //       duplicates.add(originalIndex);
-    //     } else {
-    //       seen.set(key, true);
-    //     }
-    //   });
+      data.forEach((item, index) => {
+        const key = `${item.date}-${item.classCode}`;
+        if (seen.has(key)) {
+          duplicates.add(index);
+          // Also mark the original duplicate
+          const originalIndex = data.findIndex(
+            (x) => `${x.date}-${x.classCode}` === key
+          );
+          duplicates.add(originalIndex);
+        } else {
+          seen.set(key, true);
+        }
+      });
+      return duplicates;
+    };
 
-    //   return duplicates;
-    // };
+    const duplicateIndices = computed(() => findDuplicates(salaryData.value));
+
+    const rowProps = (row: SalaryData, index: number) => {
+      return {
+        class: duplicateIndices.value.has(index) ? "duplicate-row" : "",
+      };
+    };
+
+    const salaryColumns: DataTableColumn<SalaryData>[] = [
+      {
+        title: "No",
+        key: "no",
+        width: 60,
+        align: "center",
+      },
+      {
+        title: "Teaching Date",
+        key: "date",
+        width: 150,
+      },
+      {
+        title: "Class Code",
+        key: "classCode",
+        render(row: SalaryData, index: number) {
+          return h(
+            NTooltip,
+            {
+              trigger: "hover",
+              disabled: !duplicateIndices.value.has(index),
+            },
+            {
+              default: () => row.classCode,
+              trigger: () =>
+                duplicateIndices.value.has(index)
+                  ? h("span", { class: "duplicate-text" }, row.classCode)
+                  : row.classCode,
+            }
+          );
+        },
+      },
+      {
+        title: "Teaching Hours",
+        key: "teachingHours",
+        align: "center",
+        width: 150,
+      },
+      {
+        title: "Note",
+        key: "note",
+      },
+      {
+        title: "Rate/Hour",
+        key: "rate",
+      },
+      {
+        title: "Balance",
+        key: "balance",
+      },
+    ];
     return {
       filteredData,
       monthFilter,
@@ -204,6 +227,7 @@ export default defineComponent({
       salaryColumns,
       salaryData,
       getMonthPeriod,
+      rowProps,
       viewReport,
       loading,
     };
@@ -226,18 +250,5 @@ export default defineComponent({
     color: var(--primary-color);
     font-size: 1rem;
   }
-}
-
-.duplicate-row {
-  background-color: rgba(255, 0, 0, 0.1) !important;
-}
-
-.duplicate-row:hover {
-  background-color: rgba(255, 0, 0, 0.2) !important;
-}
-
-.duplicate-text {
-  color: #ff4d4f;
-  font-weight: bold;
 }
 </style>

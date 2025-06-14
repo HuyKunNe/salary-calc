@@ -246,9 +246,7 @@ export default defineComponent({
     });
 
     onMounted(() => {
-      monthFilter.value = "";
       handleFilter();
-      console.log(listClassCodes.value);
     });
 
     const handleFileUpload = async (event: Event) => {
