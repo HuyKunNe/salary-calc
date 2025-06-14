@@ -13,6 +13,7 @@
     </n-config-provider>
     <n-modal v-model:show="showModal" transform-origin="center">
       <n-card
+        id="pdf-export"
         style="width: 70%"
         title="Salary Slip"
         :show-header="true"
@@ -21,12 +22,20 @@
         role="dialog"
         aria-modal="true"
       >
+        <n-button
+          type="primary"
+          @click="handleExport"
+          class="export-btn"
+          id="export-btn"
+        >
+          Export to PDF
+        </n-button>
         <div class="infor w-3/5 mx-auto mb-2">
           <div class="infor-row">
             <div class="infor-col flex justify-between">
               <div class="infor-col-value label">Name:</div>
               <div class="infor-col-value value">
-                {{ employeeData[0]?.name }}
+                {{ employeeSelected?.name }}
               </div>
             </div>
             <div class="infor-col flex justify-between">
@@ -46,7 +55,15 @@
             <div class="infor-col flex justify-between">
               <div class="infor-col-value label">Total teaching hours</div>
               <div class="infor-col-value value">
-                {{ employeeData[0]?.email }}
+                {{
+                  salaryData
+                    .reduce(
+                      (sum, item) =>
+                        sum + parseFloat(item.teachingHours.toString()),
+                      0
+                    )
+                    .toFixed(2)
+                }}
               </div>
             </div>
           </div>
@@ -55,7 +72,6 @@
           <n-data-table
             :columns="salaryColumns"
             :data="salaryData"
-            :max-height="400"
             :bordered="false"
             :single-line="false"
             :row-props="rowProps"
@@ -65,6 +81,7 @@
       </n-card>
     </n-modal>
   </div>
+  <SpinnerComponent v-model:show="loading"></SpinnerComponent>
 </template>
 <script lang="ts">
 import { useStorage } from "@vueuse/core";
@@ -73,9 +90,14 @@ import type { Teacher } from "../interface/Teacher";
 import type { Employee } from "../interface/Employee";
 import { NButton, NTooltip, type DataTableColumn } from "naive-ui";
 import type { SalaryData } from "../interface/SalaryData";
+import { exportToPDF } from "../utils/exportToPDF";
+import SpinnerComponent from "../components/spinner.vue";
 
 export default defineComponent({
   name: "ReportPage",
+  components: {
+    SpinnerComponent,
+  },
   setup() {
     const filteredData = useStorage<Teacher[]>("filteredData", []);
     const monthFilter = useStorage<string>("monthFilter", "");
@@ -83,9 +105,13 @@ export default defineComponent({
     const showModal = ref(false);
     const loading = ref(false);
     const salaryData = ref<SalaryData[]>([]);
-    const viewReport = (email: string) => {
+    const employeeSelected = ref<Employee | null>(null);
+    const viewReport = (employee: any) => {
+      employeeSelected.value = employee.email
+        ? employee
+        : employeeData.value.find((emp) => emp.email === employee.email);
       salaryData.value = filteredData.value
-        .filter((item) => item.email === email)
+        .filter((item) => item.email === employee.email)
         .map((item, index) => ({
           no: index + 1,
           date: item.date,
@@ -112,7 +138,7 @@ export default defineComponent({
             {
               type: "primary",
               size: "small",
-              onClick: () => viewReport(row.email),
+              onClick: () => viewReport(row),
             },
             { default: () => "View report" }
           );
@@ -160,6 +186,19 @@ export default defineComponent({
       return {
         class: duplicateIndices.value.has(index) ? "duplicate-row" : "",
       };
+    };
+    const handleExport = async () => {
+      loading.value = true;
+      try {
+        await exportToPDF("pdf-export", "salary_slip", {
+          scale: 2,
+          margin: 15, // Larger margins for better readability
+          pageFormat: [210, 297],
+        });
+      } catch (error) {
+        console.error("Export failed:", error);
+      }
+      loading.value = false;
     };
 
     const salaryColumns: DataTableColumn<SalaryData>[] = [
@@ -229,7 +268,9 @@ export default defineComponent({
       getMonthPeriod,
       rowProps,
       viewReport,
+      handleExport,
       loading,
+      employeeSelected,
     };
   },
 });

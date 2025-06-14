@@ -10,8 +10,8 @@
   </div>
 </template>
 
-<script>
-import { defineProps, defineEmits, defineComponent } from "vue";
+<script setup lang="ts">
+import { defineProps } from "vue";
 defineProps({
   show: {
     type: Boolean,
@@ -21,9 +21,6 @@ defineProps({
     type: String,
     default: "Loading...",
   },
-});
-export default defineComponent({
-  name: "Spinner",
 });
 </script>
 <style scoped>
