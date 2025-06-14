@@ -1,9 +1,9 @@
-
 :root {
-  --primary-color: #38D7E7;
+  --primary-color: #5b0b00;
   --primary-text: #0c0c0c;
   --secondary-color: #ee316b;
-  --third-color: #842D72;
+  --column-header: #366854;
+  --third-color: #842d72;
   --spacing: 1rem;
 }
 
@@ -12,6 +12,7 @@ body {
   background-color: var(#f9f7f1);
   margin: 0;
   padding: 3rem;
+  padding-bottom: 0;
   font-size: 1.2rem;
 }
 
@@ -22,6 +23,13 @@ h1 {
 
 .n-data-table .n-data-table-th {
   font-weight: bold;
-  background-color: var(--primary-color);
+  background-color: var(--column-header);
   color: white;
+}
+.n-card > .n-card-header .n-card-header__main {
+  color: white;
+  background-color: var(--primary-color);
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
 }

@@ -3,4 +3,10 @@ import App from "./App.vue";
 import "./style.css";
 import router from "./router";
 import navie from "naive-ui";
-createApp(App).use(navie).use(router).mount("#app");
+import BackButton from "./components/BackToHomePageButton.vue";
+
+createApp(App)
+  .use(navie)
+  .use(router)
+  .component("BackButton", BackButton)
+  .mount("#app");

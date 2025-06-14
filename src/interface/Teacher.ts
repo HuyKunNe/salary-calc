@@ -8,3 +8,6 @@ export interface Teacher {
   month: string; // "Tháng" (MM/YYYY format)
   note?: string; // "Ghi chú" (optional)
 }
+export interface TableTeacher extends Teacher {
+  no: number;
+}

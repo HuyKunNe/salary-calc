@@ -30,10 +30,10 @@
         </n-button>
       </div>
     </div>
-    <h3 class="mb-2">
+    <h3 class="mb-2" v-if="originalData.length > 0">
       Excel Data: <span class="italic">{{ fileName }}</span>
     </h3>
-    <div class="flex justify-between mb-2">
+    <div class="flex justify-between mb-2" v-if="originalData.length > 0">
       <div class="w-[15%] flex items-center">
         <div class="w-1/4">
           <label for="monthSearch" class="block">Tháng:</label>
@@ -104,12 +104,16 @@
     </div>
     <div v-if="error" class="error">{{ error }}</div>
     <div v-if="data.length > 0" class="mt-2">
-      <n-data-table
-        :columns="columns"
-        :data="data"
-        :max-height="450"
-        :style="{ fontSize: '1rem' }"
-      />
+      <n-config-provider>
+        <n-data-table
+          :columns="columns"
+          :bordered="false"
+          :single-line="false"
+          :data="data"
+          :max-height="450"
+          :style="{ fontSize: '1rem' }"
+        />
+      </n-config-provider>
     </div>
   </div>
 </template>
@@ -120,13 +124,20 @@ import { computed, defineComponent, onMounted, ref, watch } from "vue";
 import { SearchOutline } from "@vicons/ionicons5";
 import { useRouter } from "vue-router";
 import * as XLSX from "xlsx";
-import type { Teacher } from "../interface/Teacher";
+import type { TableTeacher, Teacher } from "../interface/Teacher";
+import type { Employee } from "../interface/Employee";
 
 interface ExcelRow {
   [key: string]: any;
 }
 
 const columns = [
+  {
+    title: "No",
+    key: "no", // Special key for index column
+    width: 60,
+    align: "center",
+  },
   {
     title: "Dấu thời gian",
     key: "created_at",
@@ -150,6 +161,7 @@ const columns = [
   {
     title: "SỐ GIỜ DẠY (H)",
     key: "teachingHours",
+    align: "center",
     width: 150,
   },
   {
@@ -163,6 +175,7 @@ const columns = [
   {
     title: "Tháng",
     key: "month",
+    align: "center",
     width: 150,
     sorter: (row1: Teacher, row2: Teacher) => {
       const [monthA, yearA] = row1.month.split("/").map(Number);
@@ -192,13 +205,15 @@ export default defineComponent({
     const fileInput = ref<HTMLInputElement | null>(null);
     const error = ref<string | null>(null);
     const originalData = useStorage<Teacher[]>("originalData", []);
-    const data = ref<Teacher[]>([]);
-    const fileName = ref<string>("Upload Excel File");
-    const listEmails = ref<string[]>([]);
-    const listMonths = ref<string[]>([]);
-    const listClassCodes = ref<string[]>([]);
+    const data = useStorage<TableTeacher[]>("data", []);
+    const fileName = useStorage<string>("fileName", "Upload Excel File");
+    const listEmails = useStorage<string[]>("listEmails", []);
+    const listMonths = useStorage<string[]>("listMonths", []);
+    const listClassCodes = useStorage<string[]>("listClassCodes", []);
     const filteredData = useStorage<Teacher[]>("filteredData", []);
     const monthFilter = useStorage<string>("monthFilter", "");
+    const employeeData = useStorage<Employee[]>("employeeData", []);
+    const classes = useStorage<string[]>("class", []);
     const searchData = ref<DataSearchModel>({
       month: "",
       email: "",
@@ -230,9 +245,19 @@ export default defineComponent({
       }));
     });
 
+    onMounted(() => {
+      monthFilter.value = "";
+      handleFilter();
+      console.log(listClassCodes.value);
+    });
+
     const handleFileUpload = async (event: Event) => {
       data.value = [];
       originalData.value = [];
+      listEmails.value = [];
+      listMonths.value = [];
+      listClassCodes.value = [];
+      employeeData.value = [];
       searchData.value = {
         month: "",
         email: "",
@@ -258,6 +283,10 @@ export default defineComponent({
             object.email.trim() !== ""
           ) {
             listEmails.value.push(object.email.trim());
+            employeeData.value.push({
+              email: object.email.trim(),
+              name: object.teacherName.trim(),
+            });
           }
           if (
             object?.month?.trim() &&
@@ -273,7 +302,10 @@ export default defineComponent({
           ) {
             listClassCodes.value.push(object.classCode.trim());
           }
-          data.value = originalData.value;
+          data.value = originalData.value.map((teacher, index) => ({
+            no: index + 1,
+            ...teacher,
+          }));
         });
       } catch (err) {
         error.value =
@@ -281,18 +313,25 @@ export default defineComponent({
       }
     };
 
-    onMounted(() => {
-      filteredData.value = [];
-      originalData.value = [];
-      data.value = [];
-      searchData.value = {
-        month: "",
-        email: "",
-        classCode: "",
-        date: null,
-      };
-      monthFilter.value = "";
-    });
+    const extractPrefixes = () => {
+      const classesList = listClassCodes.value?.map((item) => {
+        // Handle "1-1" cases (including variations)
+        if (item.includes("1-1")) {
+          return "1-1";
+        }
+
+        // Extract codes starting with O followed by letters (OYA, ONB, etc.)
+        const codeMatch = item.match(/^O[A-Z]{2,}/);
+        if (codeMatch) return codeMatch[0];
+
+        // Extract other codes (YA, NB, etc.) if they appear at start
+        const otherCodeMatch = item.match(/^[A-Z]{2,}(?=\d|\.)/);
+        if (otherCodeMatch) return otherCodeMatch[0];
+        // Return the item as-is if no pattern matches
+        return item;
+      });
+      classes.value = [...new Set(classesList)];
+    };
 
     const handleFilter = () => {
       emit("update:isLoading", true);
@@ -303,6 +342,7 @@ export default defineComponent({
       } else {
         filteredData.value = [];
       }
+      extractPrefixes();
       emit("update:isLoading", false);
     };
 
@@ -325,7 +365,7 @@ export default defineComponent({
             const worksheet = workbook.Sheets[firstSheet];
             const jsonData = XLSX.utils.sheet_to_json<ExcelRow>(worksheet, {
               raw: false, // Get formatted strings (not raw numbers)
-              dateNF: "dd/mm/yyyy", // Match your date format
+              dateNF: "dd/MM/yyyy", // Match your date format
             });
             resolve(jsonData);
           } catch (err) {
@@ -347,6 +387,10 @@ export default defineComponent({
     const resetFile = () => {
       data.value = [];
       originalData.value = [];
+      listEmails.value = [];
+      listMonths.value = [];
+      listClassCodes.value = [];
+      employeeData.value = [];
       searchData.value = {
         month: "",
         email: "",
@@ -383,24 +427,35 @@ export default defineComponent({
     });
     const handleSearch = () => {
       emit("update:isLoading", true);
-      data.value = originalData.value.filter((teacher) => {
-        if (searchData.value.month && teacher.month !== searchData.value.month)
-          return false;
-        if (searchData.value.email && teacher.email !== searchData.value.email)
-          return false;
-        if (
-          searchData.value.classCode &&
-          teacher.classCode !== searchData.value.classCode
-        )
-          return false;
-        if (
-          searchData.value.date &&
-          teacher.date !== searchData.value.date.toString()
-        ) {
-          return false;
-        }
-        return true;
-      });
+      data.value = originalData.value
+        .filter((teacher) => {
+          if (
+            searchData.value.month &&
+            teacher.month !== searchData.value.month
+          )
+            return false;
+          if (
+            searchData.value.email &&
+            teacher.email !== searchData.value.email
+          )
+            return false;
+          if (
+            searchData.value.classCode &&
+            teacher.classCode !== searchData.value.classCode
+          )
+            return false;
+          if (
+            searchData.value.date &&
+            teacher.date !== searchData.value.date.toString()
+          ) {
+            return false;
+          }
+          return true;
+        })
+        .map((teacher, index) => ({
+          no: index + 1,
+          ...teacher,
+        }));
       if (data.value.length === 0) {
         error.value = "No data found for the selected filters.";
       } else {
@@ -431,12 +486,8 @@ export default defineComponent({
       searchData,
       originalData,
       SearchOutline,
+      classes,
     };
-  },
-  mounted() {
-    if (this.isLoading) {
-      this.resetFile();
-    }
   },
 });
 </script>

@@ -3,28 +3,241 @@
     <h1 class="text-center sticky top-0">
       BÁO CÁO GIỜ DẠY THÁNG {{ monthFilter }} - GIÁO VIÊN
     </h1>
+    <n-config-provider>
+      <n-data-table
+        :columns="columns"
+        :data="data"
+        :max-height="700"
+        :style="{ fontSize: '1rem' }"
+      />
+    </n-config-provider>
+    <n-modal v-model:show="showModal" transform-origin="center">
+      <n-card
+        style="width: 70%"
+        title="Salary Slip"
+        :show-header="true"
+        :bordered="true"
+        size="huge"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div class="infor w-3/5 mx-auto mb-2">
+          <div class="infor-row">
+            <div class="infor-col flex justify-between">
+              <div class="infor-col-value label">Name:</div>
+              <div class="infor-col-value value">
+                {{ employeeData[0]?.name }}
+              </div>
+            </div>
+            <div class="infor-col flex justify-between">
+              <div class="infor-col-value label">Job Title:</div>
+              <div class="infor-col-value value">Teacher</div>
+            </div>
+            <div class="infor-col flex justify-between">
+              <div class="infor-col-value label">Job Status:</div>
+              <div class="infor-col-value value">Part-time</div>
+            </div>
+            <div class="infor-col flex justify-between">
+              <div class="infor-col-value label">Period</div>
+              <div class="infor-col-value value">
+                {{ getMonthPeriod() }}
+              </div>
+            </div>
+            <div class="infor-col flex justify-between">
+              <div class="infor-col-value label">Total teaching hours</div>
+              <div class="infor-col-value value">
+                {{ employeeData[0]?.email }}
+              </div>
+            </div>
+          </div>
+        </div>
+        <n-config-provider>
+          <n-data-table
+            :columns="salaryColumns"
+            :data="salaryData"
+            :max-height="400"
+            :bordered="false"
+            :single-line="false"
+            :style="{ fontSize: '1rem' }"
+          />
+        </n-config-provider>
+      </n-card>
+    </n-modal>
   </div>
 </template>
 <script lang="ts">
 import { useStorage } from "@vueuse/core";
-import { defineComponent } from "vue";
+import { defineComponent, h, ref } from "vue";
 import type { Teacher } from "../interface/Teacher";
+import type { Employee } from "../interface/Employee";
+import { NButton } from "naive-ui";
+import type { SalaryData } from "../interface/SalaryData";
+
+const salaryColumns = [
+  {
+    title: "No",
+    key: "no",
+    width: 60,
+    align: "center",
+  },
+  {
+    title: "Teaching Date",
+    key: "date",
+    width: 150,
+  },
+  {
+    title: "Class Code",
+    key: "classCode",
+    width: 250,
+  },
+  {
+    title: "Teaching Hours",
+    key: "teachingHours",
+    align: "center",
+    width: 150,
+  },
+  {
+    title: "Note",
+    key: "note",
+  },
+  {
+    title: "Rate/Hour",
+    key: "rate",
+  },
+  {
+    title: "Balance",
+    key: "balance",
+  },
+];
+
 export default defineComponent({
   name: "ReportPage",
-  components: {},
   setup() {
     const filteredData = useStorage<Teacher[]>("filteredData", []);
     const monthFilter = useStorage<string>("monthFilter", "");
+    const employeeData = useStorage<Employee[]>("employeeData", []);
+    const showModal = ref(false);
+    const loading = ref(false);
+    const salaryData = ref<SalaryData[]>([]);
+    const viewReport = (email: string) => {
+      salaryData.value = filteredData.value
+        .filter((item) => item.email === email)
+        .map((item, index) => ({
+          no: index + 1,
+          date: item.date,
+          classCode: item.classCode,
+          teachingHours: item.teachingHours,
+          note: item.note,
+          rate: 100000,
+          balance: 100000,
+        }));
+      showModal.value = true;
+    };
+    const columns = [
+      { title: "No", key: "no", width: 50, align: "center" },
+      { title: "Họ và Tên", key: "name" },
+      { title: "Email", key: "email" },
+      {
+        title: "Action",
+        key: "actions",
+        width: 250,
+        align: "center",
+        render(row: any) {
+          return h(
+            NButton,
+            {
+              type: "primary",
+              size: "small",
+              onClick: () => viewReport(row.email),
+            },
+            { default: () => "View report" }
+          );
+        },
+      },
+    ];
+    const getMonthPeriod = (): string => {
+      const [month, year] = monthFilter.value.split("/");
+
+      // Create date object (months are 0-indexed in JS)
+      const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+
+      // Get the last day of the month
+      const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+
+      // Format month name in English (full name)
+      const monthName = date.toLocaleString("en-US", { month: "long" });
+
+      return `1-${lastDay} ${monthName}`;
+    };
+
+    // const findDuplicates = (data: SalaryData[]) => {
+    //   const seen = new Map<string, boolean>();
+    //   const duplicates = new Set<number>();
+
+    //   data.forEach((item, index) => {
+    //     const key = `${item.date}-${item.classCode}`;
+    //     if (seen.has(key)) {
+    //       duplicates.add(index);
+    //       // Also mark the original duplicate
+    //       const originalIndex = data.findIndex(
+    //         (x) => `${x.date}-${x.classCode}` === key
+    //       );
+    //       duplicates.add(originalIndex);
+    //     } else {
+    //       seen.set(key, true);
+    //     }
+    //   });
+
+    //   return duplicates;
+    // };
     return {
       filteredData,
       monthFilter,
+      columns,
+      data: employeeData.value.map((employee, index) => ({
+        no: index + 1,
+        name: employee.name,
+        email: employee.email,
+      })),
+      employeeData,
+      showModal,
+      salaryColumns,
+      salaryData,
+      getMonthPeriod,
+      viewReport,
+      loading,
     };
-  },
-  mounted() {
-    console.log("Filtered Data:", this.filteredData);
   },
 });
 </script>
 <style scoped>
 @import "tailwindcss";
+
+.infor-col-value {
+  text-align: center;
+  margin-bottom: 0.5rem;
+  &.label {
+    width: 40%;
+    font-weight: bold;
+  }
+  &.value {
+    width: 60%;
+    font-weight: bold;
+    color: var(--primary-color);
+    font-size: 1rem;
+  }
+}
+
+.duplicate-row {
+  background-color: rgba(255, 0, 0, 0.1) !important;
+}
+
+.duplicate-row:hover {
+  background-color: rgba(255, 0, 0, 0.2) !important;
+}
+
+.duplicate-text {
+  color: #ff4d4f;
+  font-weight: bold;
+}
 </style>

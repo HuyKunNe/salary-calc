@@ -10,18 +10,21 @@
   </div>
 </template>
 
-<script setup>
-import { defineProps, defineEmits } from 'vue';
+<script>
+import { defineProps, defineEmits, defineComponent } from "vue";
 defineProps({
   show: {
     type: Boolean,
-    default: false
+    default: false,
   },
   message: {
     type: String,
-    default: 'Loading...'
-  }
-})
+    default: "Loading...",
+  },
+});
+export default defineComponent({
+  name: "Spinner",
+});
 </script>
 <style scoped>
 .overlay-spinner {
@@ -43,4 +46,5 @@ defineProps({
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
-</style>>
+</style>
+>
