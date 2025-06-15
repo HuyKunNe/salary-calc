@@ -1,5 +1,5 @@
 <template lang="">
-  <h1 class="text-center sticky top-0">BÁO CÁO GIỜ DẠY THÁNG - GIÁO VIÊN</h1>
+  <h1 class="text-center sticky top-0">Rate/Hour - GIÁO VIÊN</h1>
   <div class="flex items-center my-2 justify-around">
     <label for="fileInput" class="file-button-click">Upload rate file</label>
     <input

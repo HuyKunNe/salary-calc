@@ -300,7 +300,6 @@ export default defineComponent({
       // Extract codes starting with O followed by letters (OYA, ONB, etc.)
       const codeMatch = item.match(/^O([A-Z]+)\d*\.\d+$/);
       if (codeMatch) {
-        console.log(codeMatch[0], codeMatch[1]);
         return codeMatch[1];
       }
       // Extract other codes (YA, NB, etc.) if they appear at start
