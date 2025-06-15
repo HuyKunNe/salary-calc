@@ -20,6 +20,7 @@ defineProps({
   message: {
     type: String,
     default: "Loading...",
+    required: false,
   },
 });
 </script>

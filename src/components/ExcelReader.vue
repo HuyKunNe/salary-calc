@@ -216,7 +216,6 @@ export default defineComponent({
     const filteredData = useStorage<Teacher[]>("filteredData", []);
     const monthFilter = useStorage<string>("monthFilter", "");
     const employeeData = useStorage<Employee[]>("employeeData", []);
-    const classes = useStorage<string[]>("class", []);
     const searchData = ref<DataSearchModel>({
       month: "",
       email: "",
@@ -317,26 +316,6 @@ export default defineComponent({
       }
     };
 
-    const extractPrefixes = () => {
-      const classesList = listClassCodes.value?.map((item) => {
-        // Handle "1-1" cases (including variations)
-        if (item.includes("1-1")) {
-          return "1-1";
-        }
-
-        // Extract codes starting with O followed by letters (OYA, ONB, etc.)
-        const codeMatch = item.match(/^O[A-Z]{2,}/);
-        if (codeMatch) return codeMatch[0];
-
-        // Extract other codes (YA, NB, etc.) if they appear at start
-        const otherCodeMatch = item.match(/^[A-Z]{2,}(?=\d|\.)/);
-        if (otherCodeMatch) return otherCodeMatch[0];
-        // Return the item as-is if no pattern matches
-        return item;
-      });
-      classes.value = [...new Set(classesList)];
-    };
-
     const handleFilter = () => {
       emit("update:isLoading", true);
       if (monthFilter.value) {
@@ -346,7 +325,6 @@ export default defineComponent({
       } else {
         filteredData.value = [];
       }
-      extractPrefixes();
       emit("update:isLoading", false);
     };
 
@@ -495,7 +473,6 @@ export default defineComponent({
       originalData,
       SearchOutline,
       redirectToRate,
-      classes,
     };
   },
 });

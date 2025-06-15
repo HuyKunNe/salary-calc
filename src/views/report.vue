@@ -84,6 +84,54 @@
             :style="{ fontSize: '1rem' }"
           />
         </n-config-provider>
+        <div class="w-2/3 bonus m-auto my-1">
+          <div class="bonus-label">Bonus</div>
+          <n-input
+            type="textarea"
+            placeholder=""
+            style="width: 40%"
+            :autosize="{
+              minRows: 1,
+            }"
+          />
+          <n-input
+            v-model:value="bonus"
+            type="text"
+            placeholder="Enter amount"
+            style="width: 40%"
+            @blur="bonus = formatVND(bonus)"
+            @focus="bonus = unformatVND(bonus)"
+          />
+        </div>
+        <div class="salary">
+          <div class="salary-header"></div>
+          <div class="salary-line w-full bg-[#ffff01]">
+            <div class="salary-label">
+              <p class="text-center">GROSS salary</p>
+            </div>
+            <div class="salary-text">
+              {{
+                new Intl.NumberFormat("vi-VN", {
+                  style: "currency",
+                  currency: "VND",
+                  minimumFractionDigits: 0,
+                }).format(
+                  salaryData.reduce(
+                    (sum, item) => sum + parseFloat(item.balance.toString()),
+                    0
+                  ) + getNumericValue(bonus)
+                )
+              }}
+            </div>
+          </div>
+          <div class="salary-line w-full bg-[#cafff5]">
+            <div class="salary-label">
+              <p class="text-center">NET salary</p>
+            </div>
+            <div class="salary-text">888888</div>
+          </div>
+          <div class="salary-line"></div>
+        </div>
       </n-card>
     </n-modal>
   </div>
@@ -95,7 +143,7 @@
 <script lang="ts">
 import { useStorage } from "@vueuse/core";
 import { NButton, NTooltip, type DataTableColumn } from "naive-ui";
-import { computed, defineComponent, h, ref } from "vue";
+import { computed, defineComponent, h, ref, watch } from "vue";
 import SpinnerComponent from "../components/spinner.vue";
 import type { Employee } from "../interface/Employee";
 import type { SalaryData } from "../interface/SalaryData";
@@ -117,22 +165,54 @@ export default defineComponent({
     const employeeSelected = ref<Employee | null>(null);
     const listTeacherRates = useStorage<RateHour[]>("teacherRate", []);
     const teacherRate = ref<RateHour | null>(null);
-    const viewReport = (employee: any) => {
+    const viewReport = async (employee: any) => {
       employeeSelected.value = employee.email
         ? employee
         : employeeData.value.find((emp) => emp.email === employee.email);
-      salaryData.value = filteredData.value
-        .filter((item) => item.email === employee.email)
-        .map((item, index) => ({
-          no: index + 1,
-          date: item.date,
-          classCode: item.classCode,
-          teachingHours: item.teachingHours,
-          note: item.note,
-          rate: 100000,
-          balance: 100000,
-        }));
+      const data = filteredData.value.filter(
+        (item) => item.email === employee.email
+      );
+      teacherRate.value =
+        listTeacherRates.value.find((v) => v.email == employee.email) || null;
+      salaryData.value = data.map((item, index) => ({
+        no: index + 1,
+        date: item.date,
+        classCode: item.classCode,
+        teachingHours: item.teachingHours,
+        note: item.note,
+        rate: getRateValue(teacherRate.value, extractPrefixes(item.classCode)),
+        balance:
+          getRateValue(teacherRate.value, extractPrefixes(item.classCode)) *
+          item.teachingHours *
+          1000,
+      }));
+
       showModal.value = true;
+    };
+    const bonus = ref("");
+    const formatVND = (value: any) => {
+      if (!value) return "";
+      // Remove all non-digit characters
+      const num = String(value).replace(/\D/g, "");
+      // Format with commas and add ₫
+      return new Intl.NumberFormat("vi-VN").format(Number(num)) + " ₫";
+    };
+
+    // Revert to raw number when editing
+    const unformatVND = (value: any) => {
+      return value.replace(/[^\d]/g, "");
+    };
+
+    watch(bonus, (newValue: any) => {
+      // Update the formatted value
+      bonus.value = formatVND(newValue);
+    });
+    const getNumericValue = (formattedValue: string): number => {
+      // Remove all non-digit characters (including ₫, commas, etc.)
+      const numericString = formattedValue.replace(/[^\d]/g, "");
+
+      // Convert to number (returns 0 for empty strings)
+      return numericString ? Number(numericString) : 0;
     };
     const columns = [
       { title: "No", key: "no", width: 50, align: "center" },
@@ -169,6 +249,65 @@ export default defineComponent({
       const monthName = date.toLocaleString("en-US", { month: "long" });
 
       return `1-${lastDay} ${monthName}`;
+    };
+
+    type RateProperties = Pick<
+      RateHour,
+      | "mtc"
+      | "tesol"
+      | "ya"
+      | "tn"
+      | "tl"
+      | "ptl"
+      | "nb"
+      | "oto"
+      | "cm"
+      | "speakingTest"
+    >;
+
+    // Then update the mapping to only allow these properties
+    const ratePropertyMap: Record<string, keyof RateProperties> = {
+      MTC: "mtc",
+      TESOL: "tesol",
+      YA: "ya",
+      TN: "tn",
+      TL: "tl",
+      PTL: "ptl",
+      NB: "nb",
+      OTO: "oto",
+      CM: "cm",
+      SPEAKING_TEST: "speakingTest",
+    };
+
+    function getRateValue(item: RateHour | null, rateType: string): number {
+      if (!rateType || !item) {
+        return 0;
+      }
+      const normalizedType = rateType?.toUpperCase();
+      const propertyName = ratePropertyMap[normalizedType];
+      if (propertyName && item) {
+        // TypeScript now knows this can only be a number | undefined
+        return item[propertyName] || 0;
+      }
+      return 0;
+    }
+
+    const extractPrefixes = (item: any) => {
+      // Handle "1-1" cases (including variations)
+      if (item.includes("1-1")) {
+        return "oto";
+      }
+      // Extract codes starting with O followed by letters (OYA, ONB, etc.)
+      const codeMatch = item.match(/^O([A-Z]+)\d*\.\d+$/);
+      if (codeMatch) {
+        console.log(codeMatch[0], codeMatch[1]);
+        return codeMatch[1];
+      }
+      // Extract other codes (YA, NB, etc.) if they appear at start
+      const otherCodeMatch = item.match(/^[A-Z]{2,}(?=\d|\.)/);
+      if (otherCodeMatch) return otherCodeMatch[0];
+      // Return the item as-is if no pattern matches
+      return;
     };
 
     const findDuplicates = (data: SalaryData[]) => {
@@ -226,6 +365,7 @@ export default defineComponent({
       {
         title: "Class Code",
         key: "classCode",
+        width: 200,
         render(row: SalaryData, index: number) {
           return h(
             NTooltip,
@@ -256,10 +396,22 @@ export default defineComponent({
       {
         title: "Rate/Hour",
         key: "rate",
+        width: 150,
+        align: "center",
       },
       {
         title: "Balance",
         key: "balance",
+        width: 150,
+        align: "right", // Right-align for currency
+        render(row: any) {
+          // Format as currency (e.g., 1000 → "1,000 VND" or "$1,000")
+          return new Intl.NumberFormat("vi-VN", {
+            style: "currency",
+            currency: "VND",
+            minimumFractionDigits: 0, // No decimals for VND
+          }).format(row.balance);
+        },
       },
     ];
     return {
@@ -284,6 +436,10 @@ export default defineComponent({
       duplicateIndices,
       listTeacherRates,
       teacherRate,
+      bonus,
+      unformatVND,
+      getNumericValue,
+      formatVND,
     };
   },
 });
@@ -311,5 +467,49 @@ export default defineComponent({
   font-style: italic;
   color: red;
   font-weight: 600;
+}
+.salary-header {
+  height: 2rem;
+  background-color: var(--primary-color);
+}
+.salary-line {
+  border: 1px solid #6b8061;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  justify-content: space-around;
+}
+.salary-label {
+  border-right: 1px solid #6b8061;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  width: 25rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+.salary-text {
+  height: 100%;
+  width: 15%;
+  display: flex;
+  font-size: 1.2rem;
+  font-weight: 600;
+  align-items: center;
+  color: red;
+}
+.bonus {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: max-content;
+}
+.bonus-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 1.2rem;
+  font-weight: 400;
 }
 </style>
