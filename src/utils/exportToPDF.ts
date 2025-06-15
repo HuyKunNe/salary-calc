@@ -7,15 +7,9 @@ export const exportToPDF = async (
   fileName: string,
   options: {
     scale?: number;
-    margin?: number; // Uniform margin
-    pageFormat?: [number, number];
   } = {}
 ): Promise<void> => {
-  const {
-    scale = 2,
-    margin = 10, // mm
-    pageFormat = [210, 297], // A4 size (width × height in mm)
-  } = options;
+  const { scale = 2 } = options;
 
   try {
     const element = document.getElementById(elementId);
@@ -36,39 +30,55 @@ export const exportToPDF = async (
       backgroundColor: "#ffffff",
     });
 
-    const pdf = new jsPDF("p", "mm", pageFormat as any);
-    const imgWidth = pageFormat[0] - margin * 2;
+    canvas.toDataURL("image/png");
+
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    const paddingTop = 20; // mm
+    const paddingBottom = 20; // mm
+    const contentHeight = pageHeight - paddingTop - paddingBottom;
+
+    const imgWidth = pageWidth;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    const pageHeight = pageFormat[1] - margin * 2; // Available height per page
-    let currentPosition = 0;
 
-    // First page with proper bottom margin
-    pdf.addImage(
-      canvas,
-      "PNG",
-      margin, // x
-      margin, // y
-      imgWidth,
-      imgHeight,
-      undefined,
-      "FAST"
-    );
-    currentPosition += pageHeight;
+    let remainingHeight = imgHeight;
+    let position = 0;
 
-    // Additional pages if needed
-    while (currentPosition < imgHeight) {
-      pdf.addPage(pageFormat as any);
-      pdf.addImage(
+    while (remainingHeight > 0) {
+      const pageCanvas = document.createElement("canvas");
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = (contentHeight * canvas.height) / imgHeight;
+
+      const ctx = pageCanvas.getContext("2d");
+
+      ctx?.drawImage(
         canvas,
-        "PNG",
-        margin, // x
-        margin - currentPosition, // y (negative offset)
-        imgWidth,
-        imgHeight,
-        undefined,
-        "FAST"
+        0,
+        (position * canvas.height) / imgHeight,
+        canvas.width,
+        pageCanvas.height,
+        0,
+        0,
+        canvas.width,
+        pageCanvas.height
       );
-      currentPosition += pageHeight;
+
+      const pageImgData = pageCanvas.toDataURL("image/png");
+      if (position > 0) pdf.addPage();
+
+      pdf.addImage(
+        pageImgData,
+        "PNG",
+        0,
+        paddingTop, // Apply padding top
+        imgWidth,
+        (pageCanvas.height * imgWidth) / canvas.width
+      );
+
+      position += contentHeight;
+      remainingHeight -= contentHeight;
     }
 
     pdf.save(`${fileName}.pdf`);

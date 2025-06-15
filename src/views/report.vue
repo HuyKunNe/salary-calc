@@ -23,6 +23,7 @@
         aria-modal="true"
       >
         <n-button
+          v-if="salaryData.length > 0 && duplicateIndices.size == 0"
           type="primary"
           @click="handleExport"
           class="export-btn"
@@ -30,7 +31,7 @@
         >
           Export to PDF
         </n-button>
-        <div class="infor w-3/5 mx-auto mb-2">
+        <div class="infor w-3/5 mx-auto mb-1">
           <div class="infor-row">
             <div class="infor-col flex justify-between">
               <div class="infor-col-value label">Name:</div>
@@ -68,6 +69,11 @@
             </div>
           </div>
         </div>
+        <div class="text-center mb-1" v-if="duplicateIndices.size > 0">
+          <span class="warning-text">
+            Invalid data, please check again to export the PDF file.
+          </span>
+        </div>
         <n-config-provider>
           <n-data-table
             :columns="salaryColumns"
@@ -81,18 +87,21 @@
       </n-card>
     </n-modal>
   </div>
-  <SpinnerComponent v-model:show="loading"></SpinnerComponent>
+  <SpinnerComponent
+    v-model:show="loading"
+    :message="'Exporting to PDF'"
+  ></SpinnerComponent>
 </template>
 <script lang="ts">
 import { useStorage } from "@vueuse/core";
-import { computed, defineComponent, h, ref } from "vue";
-import type { Teacher } from "../interface/Teacher";
-import type { Employee } from "../interface/Employee";
 import { NButton, NTooltip, type DataTableColumn } from "naive-ui";
-import type { SalaryData } from "../interface/SalaryData";
-import { exportToPDF } from "../utils/exportToPDF";
+import { computed, defineComponent, h, ref } from "vue";
 import SpinnerComponent from "../components/spinner.vue";
-
+import type { Employee } from "../interface/Employee";
+import type { SalaryData } from "../interface/SalaryData";
+import type { Teacher } from "../interface/Teacher";
+import { exportToPDF } from "../utils/exportToPDF";
+import type { RateHour } from "../interface/RateHour";
 export default defineComponent({
   name: "ReportPage",
   components: {
@@ -106,6 +115,8 @@ export default defineComponent({
     const loading = ref(false);
     const salaryData = ref<SalaryData[]>([]);
     const employeeSelected = ref<Employee | null>(null);
+    const listTeacherRates = useStorage<RateHour[]>("teacherRate", []);
+    const teacherRate = ref<RateHour | null>(null);
     const viewReport = (employee: any) => {
       employeeSelected.value = employee.email
         ? employee
@@ -190,11 +201,10 @@ export default defineComponent({
     const handleExport = async () => {
       loading.value = true;
       try {
-        await exportToPDF("pdf-export", "salary_slip", {
-          scale: 2,
-          margin: 15, // Larger margins for better readability
-          pageFormat: [210, 297],
-        });
+        await exportToPDF(
+          "pdf-export",
+          `${employeeSelected.value?.name} - ${monthFilter.value}`
+        );
       } catch (error) {
         console.error("Export failed:", error);
       }
@@ -271,6 +281,9 @@ export default defineComponent({
       handleExport,
       loading,
       employeeSelected,
+      duplicateIndices,
+      listTeacherRates,
+      teacherRate,
     };
   },
 });
@@ -291,5 +304,12 @@ export default defineComponent({
     color: var(--primary-color);
     font-size: 1rem;
   }
+}
+
+.warning-text {
+  font-size: 1.4rem;
+  font-style: italic;
+  color: red;
+  font-weight: 600;
 }
 </style>

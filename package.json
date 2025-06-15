@@ -13,6 +13,7 @@
     "@vicons/ionicons5": "^0.12.0",
     "@vueuse/core": "^13.3.0",
     "html2canvas": "^1.4.1",
+    "html2pdf": "^0.0.11",
     "jspdf": "^3.0.1",
     "naive-ui": "^2.41.1",
     "tailwindcss": "^4.1.10",
@@ -21,8 +22,11 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@types/node": "^24.0.1",
+    "@types/webpack": "^5.28.5",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/tsconfig": "^0.7.0",
+    "ts-node": "^10.9.2",
     "typescript": "~5.8.3",
     "vite": "^6.3.5",
     "vue-tsc": "^2.2.8"

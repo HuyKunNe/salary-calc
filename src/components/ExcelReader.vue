@@ -10,6 +10,9 @@
         ref="fileInput"
         id="fileInput"
       />
+      <n-button type="primary" @click="redirectToRate" class="reset-button"
+        >View Rate/Hour</n-button
+      >
       <div class="flex w-2/3" v-if="sortedMonths.length > 0">
         <div class="w-[70%] flex items-center">
           <div class="w-fit">Select month to preview reports:</div>
@@ -36,7 +39,7 @@
     <div class="flex justify-between mb-2" v-if="originalData.length > 0">
       <div class="w-[15%] flex items-center">
         <div class="w-1/4">
-          <label for="monthSearch" class="block">Tháng:</label>
+          <label for="monthSearch" class="block">Month:</label>
         </div>
         <n-select
           id="monthSearch"
@@ -60,9 +63,9 @@
           :style="{ width: '80%' }"
         />
       </div>
-      <div class="w-[18%] flex items-center">
+      <div class="w-[25%] flex items-center">
         <div class="w-1/4">
-          <label for="classCodeSearch" class="block">Mã lớp:</label>
+          <label for="classCodeSearch" class="block">Class code:</label>
         </div>
         <n-select
           id="classCodeSearch"
@@ -75,7 +78,7 @@
       </div>
       <div class="w-[15%] flex items-center">
         <div class="w-1/3">
-          <label for="dateSearch" class="block">Ngày dạy:</label>
+          <label for="dateSearch" class="block">Date:</label>
         </div>
         <n-date-picker
           id="dateSearch"
@@ -139,41 +142,41 @@ const columns = [
     align: "center",
   },
   {
-    title: "Dấu thời gian",
+    title: "Created at",
     key: "created_at",
     width: 170,
   },
   {
-    title: "NGÀY DẠY",
+    title: "Date",
     key: "date",
     width: 150,
   },
   {
-    title: "TÊN GIÁO VIÊN",
+    title: "Teacher's Name",
     key: "teacherName",
     width: 270,
   },
   {
-    title: "MÃ LỚP",
+    title: "Class code",
     key: "classCode",
     width: 250,
   },
   {
-    title: "SỐ GIỜ DẠY (H)",
+    title: "Hours(H)",
     key: "teachingHours",
     align: "center",
     width: 150,
   },
   {
-    title: "Địa chỉ email",
+    title: "Email",
     key: "email",
   },
   {
-    title: "GHI CHÚ (NẾU CÓ)",
+    title: "Note",
     key: "note",
   },
   {
-    title: "Tháng",
+    title: "Month",
     key: "month",
     align: "center",
     width: 150,
@@ -252,10 +255,13 @@ export default defineComponent({
     const handleFileUpload = async (event: Event) => {
       data.value = [];
       originalData.value = [];
+      originalData.value = [];
       listEmails.value = [];
       listMonths.value = [];
       listClassCodes.value = [];
+      filteredData.value = [];
       employeeData.value = [];
+      monthFilter.value = "";
       searchData.value = {
         month: "",
         email: "",
@@ -420,6 +426,10 @@ export default defineComponent({
       router.push("/report");
     };
 
+    const redirectToRate = () => {
+      router.push("/rate");
+    };
+
     watch(monthFilter, () => {
       handleFilter();
     });
@@ -484,6 +494,7 @@ export default defineComponent({
       searchData,
       originalData,
       SearchOutline,
+      redirectToRate,
       classes,
     };
   },
@@ -492,24 +503,6 @@ export default defineComponent({
 
 <style scoped>
 @import "tailwindcss";
-
-.custom-file-input {
-  display: none;
-}
-
-.file-button-click {
-  display: inline-block;
-  cursor: pointer;
-  text-align: center;
-  max-width: 16rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 1rem;
-  border: 1px solid #cccccc;
-  background-color: #70c0e8;
-  border-radius: 10px;
-  white-space: nowrap;
-}
 
 .thead {
   background-color: var(--primary-color);

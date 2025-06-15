@@ -43,3 +43,21 @@ h1 {
 .n-data-table .n-data-table-td {
   background-color: transparent;
 }
+
+.custom-file-input {
+  display: none;
+}
+
+.file-button-click {
+  display: inline-block;
+  cursor: pointer;
+  text-align: center;
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 1rem;
+  border: 1px solid #cccccc;
+  background-color: #70c0e8;
+  border-radius: 10px;
+  white-space: nowrap;
+}
