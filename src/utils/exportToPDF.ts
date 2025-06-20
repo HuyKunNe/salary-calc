@@ -47,26 +47,11 @@ export const exportToPDF = async (
         clonedDoc.head.appendChild(style);
         const styles = `
           .duplicate-row {
-            background-color: #fff2f2 !important;
-          }
-          .duplicate-text {
-            color: #ff4d4f !important;
-            font-weight: bold;
-          }
-          .n-data-table-tr {
-            border-bottom: 1px solid #f0f0f0;
-          }
-          .n-card > .n-card-header {
-            box-sizing: border-box;
-            display: flex;
-            align-items: center;
-            font-size: var(--n-title-font-size, 18px);
-            padding: var(--n-padding-top, 16px) var(--n-padding-left, 20px) var(--n-padding-bottom, 16px) var(--n-padding-left, 20px);
-            border-bottom: 1px solid var(--n-border-color, #f0f0f0);
+            background-color: #ff4d4f !important;
           }
           .n-card-header__main {
             font-weight: var(--n-title-font-weight, 500);
-            color: var(--n-title-text-color, rgba(0, 0, 0, 0.85));
+            color: var(--n-title-text-color, #f0f0f0);
           }
         `;
         const styleEl = clonedDoc.createElement("style");
