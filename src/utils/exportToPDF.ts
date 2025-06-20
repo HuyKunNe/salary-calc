@@ -50,8 +50,7 @@ export const exportToPDF = async (
             background-color: #ff4d4f !important;
           }
           .n-card-header__main {
-            font-weight: var(--n-title-font-weight, 500);
-            color: var(--n-title-text-color, #f0f0f0);
+            color:  #f0f0f0;
           }
         `;
         const styleEl = clonedDoc.createElement("style");
