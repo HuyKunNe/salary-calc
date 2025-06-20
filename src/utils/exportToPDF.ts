@@ -20,14 +20,32 @@ export const exportToPDF = async (
     // Hide export button
     const exportBtn = document.getElementById("export-btn");
     if (exportBtn) exportBtn.style.display = "none";
-
+    await new Promise((resolve) => setTimeout(resolve, 500));
     // Generate canvas
+    // const canvas = await html2canvas(element, {
+    //   scale,
+    //   logging: false,
+    //   useCORS: true,
+    //   allowTaint: true,
+    //   backgroundColor: "#ffffff",
+    // });
+
     const canvas = await html2canvas(element, {
       scale,
-      logging: false,
       useCORS: true,
       allowTaint: true,
       backgroundColor: "#ffffff",
+      onclone: (clonedDoc) => {
+        // Inject Naive UI CSS
+        const naiveStyles = Array.from(document.querySelectorAll("style"))
+          .filter((style) => style.innerHTML.includes("n-"))
+          .map((style) => style.innerHTML)
+          .join("\n");
+
+        const style = clonedDoc.createElement("style");
+        style.innerHTML = naiveStyles;
+        clonedDoc.head.appendChild(style);
+      },
     });
 
     canvas.toDataURL("image/png");
