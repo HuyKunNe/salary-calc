@@ -133,7 +133,6 @@
               }}
             </div>
           </div>
-          <div class="salary-line"></div>
         </div>
       </n-card>
     </n-modal>
