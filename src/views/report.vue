@@ -23,7 +23,7 @@
         aria-modal="true"
       >
         <n-button
-          v-if="salaryData.length > 0 && duplicateIndices.size == 0"
+          v-if="salaryData.length > 0"
           type="primary"
           @click="handleExport"
           class="export-btn"
@@ -71,7 +71,7 @@
         </div>
         <div class="text-center mb-1" v-if="duplicateIndices.size > 0">
           <span class="warning-text">
-            Invalid data, please check again to export the PDF file.
+            Invalid data, please check it again.
           </span>
         </div>
         <n-config-provider>
@@ -97,7 +97,7 @@
           <n-input
             v-model:value="bonus"
             type="text"
-            placeholder="Enter amount"
+            placeholder="0 ₫"
             style="width: 40%"
             @blur="bonus = formatVND(bonus)"
             @focus="bonus = unformatVND(bonus)"
@@ -115,12 +115,7 @@
                   style: "currency",
                   currency: "VND",
                   minimumFractionDigits: 0,
-                }).format(
-                  salaryData.reduce(
-                    (sum, item) => sum + parseFloat(item.balance.toString()),
-                    0
-                  ) + getNumericValue(bonus)
-                )
+                }).format(balanceSalary())
               }}
             </div>
           </div>
@@ -128,7 +123,15 @@
             <div class="salary-label">
               <p class="text-center">NET salary</p>
             </div>
-            <div class="salary-text">888888</div>
+            <div class="salary-text">
+              {{
+                new Intl.NumberFormat("vi-VN", {
+                  style: "currency",
+                  currency: "VND",
+                  minimumFractionDigits: 0,
+                }).format(balanceSalary() * 0.9)
+              }}
+            </div>
           </div>
           <div class="salary-line"></div>
         </div>
@@ -196,6 +199,15 @@ export default defineComponent({
       const num = String(value).replace(/\D/g, "");
       // Format with commas and add ₫
       return new Intl.NumberFormat("vi-VN").format(Number(num)) + " ₫";
+    };
+
+    const balanceSalary = (): number => {
+      return (
+        salaryData.value.reduce(
+          (sum, item) => sum + parseFloat(item.balance.toString()),
+          0
+        ) + getNumericValue(bonus.value)
+      );
     };
 
     // Revert to raw number when editing
@@ -381,6 +393,7 @@ export default defineComponent({
             }
           );
         },
+        sorter: "default",
       },
       {
         title: "Teaching Hours",
@@ -439,6 +452,7 @@ export default defineComponent({
       unformatVND,
       getNumericValue,
       formatVND,
+      balanceSalary,
     };
   },
 });

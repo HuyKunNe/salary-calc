@@ -44,3 +44,31 @@ export function excelDaysToDate(excelDays: number): string {
     utcDate.getMonth() + 1
   }/${utcDate.getDate()}/${utcDate.getFullYear()}`;
 }
+export function formatDateString(input: string): string {
+  const date = new Date(input);
+
+  // Check if the date is valid
+  if (isNaN(date.getTime())) {
+    throw new Error("Invalid date string");
+  }
+
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const year = date.getFullYear();
+
+  // Reconstruct time (without leading zeros for hours)
+  const timePart = input.split(" ")[1] || "";
+
+  return `${month}/${day}/${year}${timePart ? " " + timePart : ""}`;
+}
+
+export function normalizeDate(input: string): string {
+  // Split into parts (handles both MM/DD/YY and MM/DD/YYYY)
+  const [month, day, year] = input.split("/");
+
+  // Pad month and day with leading zeros
+  const formattedMonth = month.padStart(2, "0");
+  const formattedDay = day.padStart(2, "0");
+  const fullYear = year.length <= 2 ? `20${year.padStart(2, "0")}` : year;
+  return `${formattedDay}/${formattedMonth}/${fullYear}`;
+}

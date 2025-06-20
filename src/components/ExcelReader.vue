@@ -104,6 +104,20 @@
           </n-button>
         </n-config-provider>
       </div>
+      <div class="w-[10%] flex items-center">
+        <n-config-provider>
+          <n-button
+            type="primary"
+            style="width: 100%; margin-left: 10px"
+            @click="resetSearch"
+          >
+            <template #icon>
+              <n-icon :component="ReloadOutline" />
+            </template>
+            Reset
+          </n-button>
+        </n-config-provider>
+      </div>
     </div>
     <div v-if="error" class="error">{{ error }}</div>
     <div v-if="data.length > 0" class="mt-2">
@@ -124,11 +138,12 @@
 <script lang="ts">
 import { useStorage } from "@vueuse/core";
 import { computed, defineComponent, onMounted, ref, watch } from "vue";
-import { SearchOutline } from "@vicons/ionicons5";
+import { SearchOutline, ReloadOutline } from "@vicons/ionicons5";
 import { useRouter } from "vue-router";
 import * as XLSX from "xlsx";
 import type { TableTeacher, Teacher } from "../interface/Teacher";
 import type { Employee } from "../interface/Employee";
+import { formatDateString, normalizeDate } from "../utils/dateFormatter";
 
 interface ExcelRow {
   [key: string]: any;
@@ -144,7 +159,7 @@ const columns = [
   {
     title: "Created at",
     key: "created_at",
-    width: 170,
+    width: 200,
   },
   {
     title: "Date",
@@ -279,6 +294,8 @@ export default defineComponent({
         const fileData = await readExcelFile(file);
         fileData.forEach((row) => {
           const object = convertExcelTeacher(row);
+          object.created_at = formatDateString(object.created_at);
+          object.date = normalizeDate(object.date);
           originalData.value = [...originalData.value, object];
           if (
             object?.email?.trim() &&
@@ -366,6 +383,16 @@ export default defineComponent({
       });
     };
 
+    const resetSearch = () => {
+      searchData.value = {
+        month: "",
+        email: "",
+        classCode: "",
+        date: null,
+      };
+      handleSearch();
+    };
+
     const resetFile = () => {
       data.value = [];
       originalData.value = [];
@@ -432,7 +459,7 @@ export default defineComponent({
             return false;
           if (
             searchData.value.date &&
-            teacher.date !== searchData.value.date.toString()
+            teacher.date.trim() != searchData.value.date.toString()
           ) {
             return false;
           }
@@ -473,6 +500,8 @@ export default defineComponent({
       originalData,
       SearchOutline,
       redirectToRate,
+      resetSearch,
+      ReloadOutline,
     };
   },
 });
