@@ -344,10 +344,10 @@ export default defineComponent({
     const duplicateIndices = computed(() => findDuplicates(salaryData.value));
 
     const rowProps = (row: SalaryData, index: number) => {
-      row;
-      return {
-        class: duplicateIndices.value.has(index) ? "duplicate-row" : "",
-      };
+      if (row)
+        return {
+          class: duplicateIndices.value.has(index) ? "duplicate-row" : "",
+        };
     };
     const handleExport = async () => {
       loading.value = true;
