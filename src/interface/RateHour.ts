@@ -13,4 +13,5 @@ export interface RateHour {
   oto?: number;
   cm?: number;
   speakingTest?: number;
+  hsu?: number;
 }

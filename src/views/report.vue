@@ -148,10 +148,10 @@ import { NButton, NTooltip, type DataTableColumn } from "naive-ui";
 import { computed, defineComponent, h, ref, watch } from "vue";
 import SpinnerComponent from "../components/spinner.vue";
 import type { Employee } from "../interface/Employee";
+import type { RateHour } from "../interface/RateHour";
 import type { SalaryData } from "../interface/SalaryData";
 import type { Teacher } from "../interface/Teacher";
 import { exportToPDF } from "../utils/exportToPDF";
-import type { RateHour } from "../interface/RateHour";
 export default defineComponent({
   name: "ReportPage",
   components: {
@@ -274,6 +274,7 @@ export default defineComponent({
       | "oto"
       | "cm"
       | "speakingTest"
+      | "hsu"
     >;
 
     // Then update the mapping to only allow these properties
@@ -288,6 +289,7 @@ export default defineComponent({
       OTO: "oto",
       CM: "cm",
       SPEAKING_TEST: "speakingTest",
+      HSU: "hsu",
     };
 
     function getRateValue(item: RateHour | null, rateType: string): number {
@@ -296,6 +298,7 @@ export default defineComponent({
       }
       const normalizedType = rateType?.toUpperCase();
       const propertyName = ratePropertyMap[normalizedType];
+
       if (propertyName && item) {
         // TypeScript now knows this can only be a number | undefined
         return item[propertyName] || 0;
@@ -307,6 +310,12 @@ export default defineComponent({
       // Handle "1-1" cases (including variations)
       if (item.includes("1-1")) {
         return "oto";
+      }
+      if (item.includes("HSU")) {
+        return "hsu";
+      }
+      if (item.includes("OTS")) {
+        return "tesol";
       }
       // Extract codes starting with O followed by letters (OYA, ONB, etc.)
       const codeMatch = item.match(/^O([A-Z]+)\d*\.\d+$/);
@@ -359,6 +368,10 @@ export default defineComponent({
         console.error("Export failed:", error);
       }
       loading.value = false;
+    };
+
+    const removeItem = (no: number) => {
+      salaryData.value = salaryData.value.filter((item) => item.no !== no);
     };
 
     const salaryColumns: DataTableColumn<SalaryData>[] = [
@@ -425,7 +438,43 @@ export default defineComponent({
           }).format(row.balance);
         },
       },
+      {
+        title: "Action",
+        key: "action",
+        width: 200, // Increased width to accommodate two buttons
+        align: "center",
+        className: "action-column",
+        render(row: any) {
+          return h(
+            "div",
+            { class: "flex gap-2 justify-end" }, // Using flex to align buttons horizontally with gap
+            [
+              h(
+                NButton,
+                {
+                  type: "primary",
+                  size: "small",
+                  onClick: () => {
+                    console.log("edit", row);
+                  },
+                },
+                { default: () => "Edit" }
+              ),
+              h(
+                NButton,
+                {
+                  type: "error",
+                  size: "small",
+                  onClick: () => removeItem(row.no),
+                },
+                { default: () => "Remove" }
+              ),
+            ]
+          );
+        },
+      },
     ];
+
     return {
       filteredData,
       monthFilter,

@@ -57,6 +57,7 @@ const columns = [
     width: 100,
     align: "center",
   },
+  { title: "HSU", key: "hsu", width: 100, align: "center" },
 ];
 
 export default defineComponent({
@@ -137,6 +138,7 @@ export default defineComponent({
         oto: excelData["1-Jan"] || 0,
         cm: excelData["CM"] || 0,
         speakingTest: excelData["Giải đề Speaking = TL"] || 0,
+        hsu: excelData["HSU-lv4-5"] || 0,
       };
     };
     return {
