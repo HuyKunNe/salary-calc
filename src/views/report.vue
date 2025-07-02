@@ -84,6 +84,48 @@
             :style="{ fontSize: '1rem' }"
           />
         </n-config-provider>
+        <n-card
+          id="addNew"
+          ref="addNew"
+          title="Add new row"
+          :show-header="true"
+          :bordered="true"
+          class="w-4/5 mx-auto mb-4 add-new"
+        >
+          <div class="flex gap-2 items-center">
+            <div class="w-[60rem]">
+              <n-date-picker
+                value-format="dd/MM/yyyy"
+                format="dd/MM/yyyy"
+                v-model:formatted-value="newRow.date"
+              />
+            </div>
+            <n-input
+              placeholder="Class Code"
+              class="w-1/5"
+              v-model:value="classCodeUpper"
+            />
+
+            <n-input
+              placeholder="Hours"
+              type="number"
+              class="w-1/5"
+              step="0.5"
+              v-model:value="newRow.teachingHours"
+            />
+
+            <n-input
+              placeholder="Note"
+              class="w-1/5"
+              v-model:value="newRow.note"
+            />
+
+            <n-button type="primary" class="w-1/5" @click="addNewRow"
+              >Add</n-button
+            >
+          </div>
+        </n-card>
+
         <div class="w-2/3 bonus m-auto my-1">
           <div class="bonus-label">Bonus</div>
           <n-input
@@ -167,6 +209,12 @@ export default defineComponent({
     const employeeSelected = ref<Employee | null>(null);
     const listTeacherRates = useStorage<RateHour[]>("teacherRate", []);
     const teacherRate = ref<RateHour | null>(null);
+    const newRow = ref<Partial<any>>({
+      date: "01/01/2025",
+      classCode: "",
+      teachingHours: "",
+      note: "",
+    });
     const viewReport = async (employee: any) => {
       employeeSelected.value = employee.email
         ? employee
@@ -308,22 +356,22 @@ export default defineComponent({
 
     const extractPrefixes = (item: any) => {
       // Handle "1-1" cases (including variations)
-      if (item.includes("1-1")) {
+      if (item?.includes("1-1")) {
         return "oto";
       }
-      if (item.includes("HSU")) {
+      if (item?.includes("HSU")) {
         return "hsu";
       }
-      if (item.includes("OTS")) {
+      if (item?.includes("OTS")) {
         return "tesol";
       }
       // Extract codes starting with O followed by letters (OYA, ONB, etc.)
-      const codeMatch = item.match(/^O([A-Z]+)\d*\.\d+$/);
+      const codeMatch = item?.match(/^O([A-Z]+)\d*\.\d+$/);
       if (codeMatch) {
         return codeMatch[1];
       }
       // Extract other codes (YA, NB, etc.) if they appear at start
-      const otherCodeMatch = item.match(/^[A-Z]{2,}(?=\d|\.)/);
+      const otherCodeMatch = item?.match(/^[A-Z]{2,}(?=\d|\.)/);
       if (otherCodeMatch) return otherCodeMatch[0];
       // Return the item as-is if no pattern matches
       return;
@@ -333,7 +381,7 @@ export default defineComponent({
       const seen = new Map<string, boolean>();
       const duplicates = new Set<number>();
 
-      data.forEach((item, index) => {
+      data?.forEach((item, index) => {
         const key = `${item.date}-${item.classCode}`;
         if (seen.has(key)) {
           duplicates.add(index);
@@ -416,6 +464,9 @@ export default defineComponent({
         key: "teachingHours",
         align: "center",
         width: 150,
+        render(row: SalaryData) {
+          return h("span", Number(row.teachingHours).toFixed(2));
+        },
       },
       {
         title: "Note",
@@ -495,6 +546,47 @@ export default defineComponent({
           "key" in col && col.key !== "action"
       );
     };
+    const classCodeUpper = computed({
+      get: () => newRow.value.classCode || "",
+      set: (val: string) => {
+        newRow.value.classCode = val.toUpperCase().trim();
+      },
+    });
+
+    const addNewRow = () => {
+      if (
+        !newRow.value.date ||
+        !newRow.value.classCode ||
+        !newRow.value.teachingHours
+      ) {
+        window.alert("Please fill in all required fields.");
+        return;
+      }
+
+      const nextNo = salaryData.value.length + 1;
+      const rateType = extractPrefixes(newRow.value.classCode || "");
+      const rate = getRateValue(teacherRate.value, rateType);
+
+      const newSalaryItem: SalaryData = {
+        no: nextNo,
+        date: newRow.value.date!,
+        classCode: newRow.value.classCode!,
+        teachingHours: Number(newRow.value.teachingHours),
+        note: newRow.value.note || "",
+        rate,
+        balance: rate * Number(newRow.value.teachingHours) * 1000,
+      };
+
+      salaryData.value.push(newSalaryItem);
+
+      // Reset form
+      newRow.value = {
+        date: "01/01/2025",
+        classCode: "",
+        teachingHours: "",
+        note: "",
+      };
+    };
 
     return {
       filteredData,
@@ -515,6 +607,7 @@ export default defineComponent({
       handleExport,
       loading,
       employeeSelected,
+      addNewRow,
       duplicateIndices,
       listTeacherRates,
       teacherRate,
@@ -523,6 +616,8 @@ export default defineComponent({
       getNumericValue,
       formatVND,
       balanceSalary,
+      newRow,
+      classCodeUpper,
     };
   },
 });

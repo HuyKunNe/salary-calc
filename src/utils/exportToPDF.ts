@@ -20,6 +20,8 @@ export const exportToPDF = async (
     // Hide export button
     const exportBtn = document.getElementById("export-btn");
     if (exportBtn) exportBtn.style.display = "none";
+    const addNew = document.getElementById("addNew");
+    if (addNew) addNew.style.display = "none";
     await new Promise((resolve) => setTimeout(resolve, 1500));
     // Generate canvas
     // const canvas = await html2canvas(element, {
@@ -118,5 +120,7 @@ export const exportToPDF = async (
     // Restore export button
     const exportBtn = document.getElementById("export-btn");
     if (exportBtn) exportBtn.style.display = "block";
+    const addNew = document.getElementById("addNew");
+    if (addNew) addNew.style.display = "block";
   }
 };
