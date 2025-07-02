@@ -357,13 +357,16 @@ export default defineComponent({
           class: duplicateIndices.value.has(index) ? "duplicate-row" : "",
         };
     };
+
     const handleExport = async () => {
       loading.value = true;
       try {
+        removeActionColumn();
         await exportToPDF(
           "pdf-export",
           `${employeeSelected.value?.name} - ${monthFilter.value}`
         );
+        addActionColumn();
       } catch (error) {
         console.error("Export failed:", error);
       }
@@ -374,7 +377,7 @@ export default defineComponent({
       salaryData.value = salaryData.value.filter((item) => item.no !== no);
     };
 
-    const salaryColumns: DataTableColumn<SalaryData>[] = [
+    const salaryColumns = ref<DataTableColumn<SalaryData>[]>([
       {
         title: "No",
         key: "no",
@@ -441,39 +444,57 @@ export default defineComponent({
       {
         title: "Action",
         key: "action",
-        width: 200, // Increased width to accommodate two buttons
+        width: 200,
         align: "center",
-        className: "action-column",
-        render(row: any) {
+        render(row) {
           return h(
-            "div",
-            { class: "flex gap-2 justify-end" }, // Using flex to align buttons horizontally with gap
-            [
-              h(
-                NButton,
-                {
-                  type: "primary",
-                  size: "small",
-                  onClick: () => {
-                    console.log("edit", row);
-                  },
-                },
-                { default: () => "Edit" }
-              ),
-              h(
-                NButton,
-                {
-                  type: "error",
-                  size: "small",
-                  onClick: () => removeItem(row.no),
-                },
-                { default: () => "Remove" }
-              ),
-            ]
+            NButton,
+            {
+              type: "error",
+              size: "small",
+              onClick: () => removeItem(row.no),
+            },
+            { default: () => "Remove" }
           );
         },
       },
-    ];
+    ]);
+
+    const addActionColumn = () => {
+      // Type-safe check for existing action column
+      const hasActionColumn = salaryColumns.value.some(
+        (col): col is DataTableColumn<SalaryData> & { key: "action" } =>
+          "key" in col && col.key === "action"
+      );
+
+      if (!hasActionColumn) {
+        const actionColumn: DataTableColumn<SalaryData> = {
+          title: "Action",
+          key: "action",
+          width: 200,
+          align: "center",
+          render(row) {
+            return h(
+              NButton,
+              {
+                type: "error",
+                size: "small",
+                onClick: () => removeItem(row.no),
+              },
+              { default: () => "Remove" }
+            );
+          },
+        };
+        salaryColumns.value = [...salaryColumns.value, actionColumn];
+      }
+    };
+
+    const removeActionColumn = () => {
+      salaryColumns.value = salaryColumns.value.filter(
+        (col): col is DataTableColumn<SalaryData> =>
+          "key" in col && col.key !== "action"
+      );
+    };
 
     return {
       filteredData,
