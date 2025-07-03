@@ -74,13 +74,21 @@
             Invalid data, please check it again.
           </span>
         </div>
+        <div class="text-center mb-1" id="export-csv-btn">
+          <n-button @click="downloadCsv" type="primary" class="mb-2">
+            Export CSV (original data)
+          </n-button>
+        </div>
         <n-config-provider>
           <n-data-table
+            ref="tableRef"
             :columns="salaryColumns"
             :data="salaryData"
             :bordered="false"
             :single-line="false"
             :row-props="rowProps"
+            :get-csv-cell="getCsvCell"
+            :get-csv-header="getCsvHeader"
             :style="{ fontSize: '1rem' }"
           />
         </n-config-provider>
@@ -186,7 +194,14 @@
 </template>
 <script lang="ts">
 import { useStorage } from "@vueuse/core";
-import { NButton, NTooltip, type DataTableColumn } from "naive-ui";
+import {
+  NButton,
+  NTooltip,
+  type DataTableColumn,
+  type DataTableGetCsvCell,
+  type DataTableGetCsvHeader,
+  type DataTableInst,
+} from "naive-ui";
 import { computed, defineComponent, h, ref, watch } from "vue";
 import SpinnerComponent from "../components/spinner.vue";
 import type { Employee } from "../interface/Employee";
@@ -194,6 +209,7 @@ import type { RateHour } from "../interface/RateHour";
 import type { SalaryData } from "../interface/SalaryData";
 import type { Teacher } from "../interface/Teacher";
 import { exportToPDF } from "../utils/exportToPDF";
+import { exportToCsv } from "../utils/csvExport";
 export default defineComponent({
   name: "ReportPage",
   components: {
@@ -366,12 +382,12 @@ export default defineComponent({
         return "tesol";
       }
       // Extract codes starting with O followed by letters (OYA, ONB, etc.)
-      const codeMatch = item?.match(/^O([A-Z]+)\d*\.\d+$/);
+      const codeMatch = item?.trim().match(/^O([A-Z]+)\d*\.\d+$/);
       if (codeMatch) {
         return codeMatch[1];
       }
       // Extract other codes (YA, NB, etc.) if they appear at start
-      const otherCodeMatch = item?.match(/^[A-Z]{2,}(?=\d|\.)/);
+      const otherCodeMatch = item?.trim().match(/^[A-Z]{2,}(?=\d|\.)/);
       if (otherCodeMatch) return otherCodeMatch[0];
       // Return the item as-is if no pattern matches
       return;
@@ -588,6 +604,48 @@ export default defineComponent({
       };
     };
 
+    const getCsvCell: DataTableGetCsvCell = (value, _) => {
+      if (typeof value === "string") {
+        value = value.normalize("NFC"); // Normalize the string
+      }
+      return value;
+    };
+    const getCsvHeader: DataTableGetCsvHeader = (col) => {
+      if (typeof col.title === "function") {
+        return col.key === "age" ? "Age" : "Unknown";
+      } else {
+        return col.title || "Unknown";
+      }
+    };
+    const downloadCsv = () => {
+      removeActionColumn();
+
+      // Get the data you want to export
+      const dataToExport = salaryData.value.map((row: any) => {
+        return {
+          ...row,
+          // Apply any custom formatting here
+          age: row.age ? `${row.age} years old` : "",
+        };
+      });
+      // Generate filename
+      const filename = `${employeeSelected.value?.name} - ${monthFilter.value}.csv`;
+      const headers = [
+        "No",
+        "Teaching Date",
+        "Class Code",
+        "Teaching Hours",
+        "Note",
+        "Rate/Hour",
+        "Balance",
+      ];
+      // Export
+      exportToCsv(filename, dataToExport, headers);
+
+      addActionColumn();
+    };
+    const tableRef = ref<DataTableInst>();
+
     return {
       filteredData,
       monthFilter,
@@ -597,6 +655,7 @@ export default defineComponent({
         name: employee.name,
         email: employee.email,
       })),
+      tableRef,
       employeeData,
       showModal,
       salaryColumns,
@@ -614,10 +673,13 @@ export default defineComponent({
       bonus,
       unformatVND,
       getNumericValue,
+      getCsvCell,
       formatVND,
       balanceSalary,
       newRow,
+      getCsvHeader,
       classCodeUpper,
+      downloadCsv,
     };
   },
 });

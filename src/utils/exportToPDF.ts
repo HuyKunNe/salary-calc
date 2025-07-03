@@ -20,6 +20,8 @@ export const exportToPDF = async (
     // Hide export button
     const exportBtn = document.getElementById("export-btn");
     if (exportBtn) exportBtn.style.display = "none";
+    const exportCsvBtn = document.getElementById("export-csv-btn");
+    if (exportCsvBtn) exportCsvBtn.style.display = "none";
     const addNew = document.getElementById("addNew");
     if (addNew) addNew.style.display = "none";
     await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -122,5 +124,7 @@ export const exportToPDF = async (
     if (exportBtn) exportBtn.style.display = "block";
     const addNew = document.getElementById("addNew");
     if (addNew) addNew.style.display = "block";
+    const exportCsvBtn = document.getElementById("export-csv-btn");
+    if (exportCsvBtn) exportCsvBtn.style.display = "block";
   }
 };
