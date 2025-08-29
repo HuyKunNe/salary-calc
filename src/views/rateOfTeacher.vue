@@ -49,6 +49,7 @@ const columns = [
   { title: "TL", key: "tl", width: 100, align: "center" },
   { title: "PTL", key: "ptl", width: 100, align: "center" },
   { title: "NB", key: "nb", width: 100, align: "center" },
+  { title: "BE", key: "be", width: 100, align: "center" },
   { title: "1-1", key: "oto", width: 100, align: "center" },
   { title: "CM", key: "cm", width: 100, align: "center" },
   {
@@ -135,6 +136,7 @@ export default defineComponent({
         tl: excelData["TL"] || 0,
         ptl: excelData["PTL"] || 0,
         nb: excelData["NB"] || 0,
+        be: excelData["NB"] || 0,
         oto: excelData["1-Jan"] || 0,
         cm: excelData["CM"] || 0,
         speakingTest: excelData["Giải đề Speaking = TL"] || 0,

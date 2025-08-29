@@ -249,8 +249,8 @@ export default defineComponent({
         rate: getRateValue(teacherRate.value, extractPrefixes(item.classCode)),
         balance:
           getRateValue(teacherRate.value, extractPrefixes(item.classCode)) *
-          item.teachingHours *
-          1000,
+          1000 *
+          item.teachingHours,
       }));
 
       showModal.value = true;
@@ -335,6 +335,7 @@ export default defineComponent({
       | "tl"
       | "ptl"
       | "nb"
+      | "be"
       | "oto"
       | "cm"
       | "speakingTest"
@@ -350,6 +351,7 @@ export default defineComponent({
       TL: "tl",
       PTL: "ptl",
       NB: "nb",
+      BE: "be",
       OTO: "oto",
       CM: "cm",
       SPEAKING_TEST: "speakingTest",

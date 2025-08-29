@@ -10,6 +10,7 @@ export interface RateHour {
   tl?: number;
   ptl?: number;
   nb?: number;
+  be?: number;
   oto?: number;
   cm?: number;
   speakingTest?: number;
