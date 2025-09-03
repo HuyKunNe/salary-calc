@@ -419,7 +419,7 @@ export default defineComponent({
         date: excelData["NGÀY DẠY"],
         teacherName: excelData["TÊN GIÁO VIÊN"],
         classCode: excelData["MÃ LỚP"],
-        teachingHours: excelData["SỐ GIỜ DẠY (H)"],
+        teachingHours: excelData["SỐ GIỜ DẠY (H)"] || 0,
         email: excelData["Địa chỉ email"],
         month: excelData["Tháng"],
         note: excelData["GHI CHÚ (NẾU CÓ)"],
