@@ -383,6 +383,9 @@ export default defineComponent({
       if (item?.includes("OTS")) {
         return "tesol";
       }
+      if (item?.includes("TS")) {
+        return "tesol";
+      }
       // Extract codes starting with O followed by letters (OYA, ONB, etc.)
       const codeMatch = item?.trim().match(/^O([A-Z]+)\d*\.\d+$/);
       if (codeMatch) {
