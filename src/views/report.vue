@@ -386,8 +386,10 @@ export default defineComponent({
       if (item?.includes("TS")) {
         return "tesol";
       }
-      if (item?.includes("OMOTL")) {
-        return "tl";
+      const omoMatch = item.trim().match(/^OMO([A-Z]+)/);
+      if (omoMatch) {
+        const code = omoMatch[1]; // YA, NB, TL, ...
+        return ratePropertyMap[code as keyof typeof ratePropertyMap];
       }
       // Extract codes starting with O followed by letters (OYA, ONB, etc.)
       const codeMatch = item?.trim().match(/^O([A-Z]+)\d*\.\d+$/);
