@@ -61,7 +61,7 @@
                     .reduce(
                       (sum, item) =>
                         sum + parseFloat(item.teachingHours.toString()),
-                      0
+                      0,
                     )
                     .toFixed(2)
                 }}
@@ -236,7 +236,7 @@ export default defineComponent({
         ? employee
         : employeeData.value.find((emp) => emp.email === employee.email);
       const data = filteredData.value.filter(
-        (item) => item.email === employee.email
+        (item) => item.email === employee.email,
       );
       teacherRate.value =
         listTeacherRates.value.find((v) => v.email == employee.email) || null;
@@ -268,7 +268,7 @@ export default defineComponent({
       return (
         salaryData.value.reduce(
           (sum, item) => sum + parseFloat(item.balance.toString()),
-          0
+          0,
         ) + getNumericValue(bonus.value)
       );
     };
@@ -306,7 +306,7 @@ export default defineComponent({
               size: "small",
               onClick: () => viewReport(row),
             },
-            { default: () => "View report" }
+            { default: () => "View report" },
           );
         },
       },
@@ -386,6 +386,9 @@ export default defineComponent({
       if (item?.includes("TS")) {
         return "tesol";
       }
+      if (item?.includes("OMOTL")) {
+        return "tl";
+      }
       // Extract codes starting with O followed by letters (OYA, ONB, etc.)
       const codeMatch = item?.trim().match(/^O([A-Z]+)\d*\.\d+$/);
       if (codeMatch) {
@@ -408,7 +411,7 @@ export default defineComponent({
           duplicates.add(index);
           // Also mark the original duplicate
           const originalIndex = data.findIndex(
-            (x) => `${x.date}-${x.classCode}` === key
+            (x) => `${x.date}-${x.classCode}` === key,
           );
           duplicates.add(originalIndex);
         } else {
@@ -433,7 +436,7 @@ export default defineComponent({
         removeActionColumn();
         await exportToPDF(
           "pdf-export",
-          `${employeeSelected.value?.name} - ${monthFilter.value}`
+          `${employeeSelected.value?.name} - ${monthFilter.value}`,
         );
         addActionColumn();
       } catch (error) {
@@ -475,7 +478,7 @@ export default defineComponent({
                 duplicateIndices.value.has(index)
                   ? h("span", { class: "duplicate-text" }, row.classCode)
                   : row.classCode,
-            }
+            },
           );
         },
         sorter: "default",
@@ -526,7 +529,7 @@ export default defineComponent({
               size: "small",
               onClick: () => removeItem(row.no),
             },
-            { default: () => "Remove" }
+            { default: () => "Remove" },
           );
         },
       },
@@ -536,7 +539,7 @@ export default defineComponent({
       // Type-safe check for existing action column
       const hasActionColumn = salaryColumns.value.some(
         (col): col is DataTableColumn<SalaryData> & { key: "action" } =>
-          "key" in col && col.key === "action"
+          "key" in col && col.key === "action",
       );
 
       if (!hasActionColumn) {
@@ -553,7 +556,7 @@ export default defineComponent({
                 size: "small",
                 onClick: () => removeItem(row.no),
               },
-              { default: () => "Remove" }
+              { default: () => "Remove" },
             );
           },
         };
@@ -564,7 +567,7 @@ export default defineComponent({
     const removeActionColumn = () => {
       salaryColumns.value = salaryColumns.value.filter(
         (col): col is DataTableColumn<SalaryData> =>
-          "key" in col && col.key !== "action"
+          "key" in col && col.key !== "action",
       );
     };
     const classCodeUpper = computed({
